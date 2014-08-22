@@ -48,7 +48,8 @@ class CachingManager(models.Manager):
         invalidate_instance = instance
         if created:
             cqs = CachingQuerySet(self.model, using=self._db)
-            invalidate_instance = cqs[0]
+            if cqs.count() > 1:
+                invalidate_instance = cqs[1]
         self.invalidate(invalidate_instance)
 
     def post_delete(self, instance, **kwargs):
