@@ -40,8 +40,16 @@ class CachingManager(models.Manager):
         signals.post_delete.connect(self.post_delete, sender=cls)
         return super(CachingManager, self).contribute_to_class(cls, name)
 
-    def post_save(self, instance, **kwargs):
-        self.invalidate(instance)
+    def post_save(self, instance, created, **kwargs):
+        """
+        Invalidates the first item in CachingQuerySet when a new object
+        is created.  Otherwise, invalidates the post_save instance object
+        """
+        invalidate_instance = instance
+        if created:
+            cqs = CachingQuerySet(self.model, using=self._db)
+            invalidate_instance = cqs[0]
+        self.invalidate(invalidate_instance)
 
     def post_delete(self, instance, **kwargs):
         self.invalidate(instance)
