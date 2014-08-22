@@ -42,14 +42,15 @@ class CachingManager(models.Manager):
 
     def post_save(self, instance, created, **kwargs):
         """
-        Invalidates the first item in CachingQuerySet when a new object
+        Invalidates the last item in CachingQuerySet when a new object
         is created.  Otherwise, invalidates the post_save instance object
         """
         invalidate_instance = instance
         if created:
             cqs = CachingQuerySet(self.model, using=self._db)
-            if cqs.count() > 1:
-                invalidate_instance = cqs[1]
+            invalidate_instance = cqs.first()
+            if instance == invalidate_instance:
+                invalidate_instance = cqs.last()
         self.invalidate(invalidate_instance)
 
     def post_delete(self, instance, **kwargs):
